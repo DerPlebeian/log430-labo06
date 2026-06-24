@@ -3,6 +3,7 @@ Handler: decrease stock
 SPDX - License - Identifier: LGPL - 3.0 - or -later
 Auteurs : Gabriel C. Ullmann, Fabio Petrillo, 2025
 """
+import config
 import requests
 from handlers.handler import Handler
 from order_saga_state import OrderSagaState
@@ -19,26 +20,48 @@ class DecreaseStockHandler(Handler):
     def run(self):
         """Call StoreManager to check out from stock"""
         try:
-            # TODO: effectuer une requête à /stocks pour diminuer les quantités dans le stock
-            """
-            POST my-api-gateway-address/stocks ...
-            json={
-                    "items": self.order_item_data,
-                    "operation": "-"
+            response = requests.put(
+                f'{config.API_GATEWAY_URL}/store-manager-api/stocks',
+                json={
+                    'items': self.order_item_data,
+                    'operation': '-'
                 },
-            """
-            response_ok = True
-            if response_ok:
+                headers={'Content-Type': 'application/json'}
+            )
+            if response.ok:
                 self.logger.debug("Transition d'état: DecreaseStock -> STOCK_DECREASED")
                 return OrderSagaState.STOCK_DECREASED
             else:
+                try:
+                    payload = response.json()
+                except Exception:
+                    payload = response.text
+                self.logger.error(f"DecreaseStock a échoué : {response.status_code} - {payload}")
                 return self.rollback()
             
-        except Exception:
+        except Exception as e:
+            self.logger.error("DecreaseStock a échoué : " + str(e))
             return self.rollback()
         
     def rollback(self):
         """ Call StoreManager to delete order if stock decrease fails """
-        # TODO: utilisez l'ID de la commande pour la supprimer
-        self.logger.debug(f"Transition d'état: DecreaseStockFailure -> ORDER_DELETED")
-        return OrderSagaState.ORDER_DELETED
+        try:
+            response = requests.delete(
+                f'{config.API_GATEWAY_URL}/store-manager-api/orders/{self.order_id}',
+                headers={'Content-Type': 'application/json'}
+            )
+
+            if response.ok:
+                self.logger.debug("Transition d'état: DecreaseStockFailure -> ORDER_DELETED")
+                return OrderSagaState.ORDER_DELETED
+
+            try:
+                payload = response.json()
+            except Exception:
+                payload = response.text
+            self.logger.error(f"Rollback DecreaseStock a échoué : {response.status_code} - {payload}")
+            return OrderSagaState.END
+
+        except Exception as e:
+            self.logger.error("Rollback DecreaseStock a échoué : " + str(e))
+            return OrderSagaState.END

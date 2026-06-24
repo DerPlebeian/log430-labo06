@@ -6,6 +6,7 @@ Auteurs : Gabriel C. Ullmann, Fabio Petrillo, 2025
 from handlers.create_order_handler import CreateOrderHandler
 from handlers.decrease_stock_handler import DecreaseStockHandler
 from handlers.create_payment_handler import CreatePaymentHandler
+from handlers.delete_order_handler import DeleteOrderHandler
 from controllers.controller import Controller
 from order_saga_state import OrderSagaState
 
@@ -23,6 +24,7 @@ class OrderSagaController(Controller):
         self.create_order_handler = None
         self.decrease_stock_handler = None
         self.create_payment_handler = None
+        self.delete_order_handler = None
         self.is_error_occurred = False
 
     def run(self, request):
@@ -46,8 +48,8 @@ class OrderSagaController(Controller):
                 self.create_payment_handler = CreatePaymentHandler(self.create_order_handler.order_id, order_data)
                 self.current_saga_state = self.create_payment_handler.run()
             elif self.current_saga_state == OrderSagaState.STOCK_INCREASED:
-                self.logger.debug("TODO: implémentez et utilisez la classe DeleteOrderHandler et ensuite changez à l'état ORDER_DELETED")
-                self.current_saga_state = OrderSagaState.ORDER_DELETED
+                self.delete_order_handler = DeleteOrderHandler(self.create_order_handler.order_id)
+                self.current_saga_state = self.delete_order_handler.run()
             elif self.current_saga_state is OrderSagaState.PAYMENT_CREATED or self.current_saga_state is OrderSagaState.ORDER_DELETED:
                 self.logger.debug("Transition à l'état terminal")
                 self.current_saga_state = OrderSagaState.END
