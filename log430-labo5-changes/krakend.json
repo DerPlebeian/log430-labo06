@@ -1,0 +1,98 @@
+{
+  "version": 3,
+  "name": "Store Manager API Gateway",
+  "timeout": "5s",
+  "cache_ttl": "300s",
+  "output_encoding": "json",
+  "port": 8080,
+  "extra_config": {
+    "telemetry/opentelemetry": {
+      "service_name": "krakend-gateway",
+      "service_version": "1.0.0",
+      "exporters": {
+        "otlp": [
+          {
+            "name": "jaeger",
+            "host": "jaeger",
+            "port": 4317,
+            "use_http": false
+          }
+        ]
+      }
+    }
+  },
+  "endpoints": [
+    {
+      "endpoint": "/store-manager-api/orders",
+      "method": "POST",
+      "input_headers": ["*"],
+      "backend": [
+        {
+          "url_pattern": "/orders",
+          "host": ["http://store_manager:5000"],
+          "timeout": "5s"
+        }
+      ]
+    },
+    {
+      "endpoint": "/store-manager-api/orders/{order_id}",
+      "method": "DELETE",
+      "input_headers": ["*"],
+      "backend": [
+        {
+          "url_pattern": "/orders/{order_id}",
+          "host": ["http://store_manager:5000"],
+          "timeout": "5s"
+        }
+      ]
+    },
+    {
+      "endpoint": "/store-manager-api/stocks",
+      "method": "PUT",
+      "input_headers": ["*"],
+      "backend": [
+        {
+          "url_pattern": "/stocks",
+          "host": ["http://store_manager:5000"],
+          "timeout": "5s"
+        }
+      ]
+    },
+    {
+      "endpoint": "/store-manager-api/orders/{order_id}",
+      "method": "GET",
+      "input_headers": ["*"],
+      "backend": [
+        {
+          "url_pattern": "/orders/{order_id}",
+          "host": ["http://store_manager:5000"],
+          "timeout": "5s"
+        }
+      ]
+    },
+    {
+      "endpoint": "/payments-api/payments",
+      "method": "POST",
+      "input_headers": ["*"],
+      "backend": [
+        {
+          "url_pattern": "/payments",
+          "host": ["http://payments_api:5009"],
+          "timeout": "5s"
+        }
+      ]
+    },
+    {
+      "endpoint": "/payments-api/payments/{payment_id}",
+      "method": "POST",
+      "input_headers": ["*"],
+      "backend": [
+        {
+          "url_pattern": "/payments/process/{payment_id}",
+          "host": ["http://payments_api:5009"],
+          "timeout": "5s"
+        }
+      ]
+    }
+  ]
+}

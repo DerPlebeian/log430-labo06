@@ -1,0 +1,30 @@
+@startuml
+  node Magasin {
+    component "KrakenD" 
+    component "store_manager.py" 
+    database "MySQL 1"
+    database "Redis"
+    "KrakenD" <--> "store_manager.py"
+    "store_manager.py" <--> "MySQL 1"
+    "store_manager.py" <--> "Redis"
+  }
+
+  node ServicePaiement {
+    component "payment_api.py" 
+    database "MySQL 2"
+    "payment_api.py" <--> "MySQL 2"
+  }
+
+  node OrchestrateurSaga {
+    component "saga_orchestrator.py" 
+    component "Jaeger" 
+    "Jaeger" <--> "saga_orchestrator.py" : OTLP
+    "KrakenD" --> "Jaeger" : OTLP
+    "KrakenD" <--> "saga_orchestrator.py" : HTTP
+    "payment_api.py" <--> "saga_orchestrator.py" : HTTPS
+  }
+
+
+  "KrakenD" <--> "payment_api.py" : HTTPS
+
+@enduml

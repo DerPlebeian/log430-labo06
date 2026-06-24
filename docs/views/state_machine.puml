@@ -1,0 +1,20 @@
+@startuml
+1 : ORDER_CREATED
+2 : STOCK_DECREASED
+3 : PAYMENT_CREATED
+4 : STOCK_INCREASED
+5 : ORDER_DELETED
+
+[*] --> 1 : CreateOrder
+1 --> 2 : DecreaseStock
+1 -> 5 : DecreaseStockFailure
+
+2 --> 3 : CreatePayment
+2 --> 4 : CreatePaymentFailure
+
+3 --> [*]
+
+4 --> 5 : DeleteOrder
+5 --> [*]
+
+@enduml

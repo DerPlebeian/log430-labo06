@@ -1,0 +1,4 @@
+@startuml
+    Vendeur.euse --> (Créer les commandes)
+    Client.e --> (Créer les commandes)
+@enduml
